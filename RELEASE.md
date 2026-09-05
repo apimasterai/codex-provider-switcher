@@ -1,0 +1,36 @@
+# Release checklist
+
+1. Update the version in `pyproject.toml` and `codex_provider_switcher.py`.
+2. Update `CHANGELOG.md`, run the test suite, and review the generated diff.
+3. Build source and wheel distributions:
+
+   ```bash
+   python -m build
+   ```
+
+4. Validate the distributions:
+
+   ```bash
+   twine check dist/*
+   ```
+
+5. Configure a PyPI project and trusted publisher for the repository and workflow
+   `publish.yml`. This requires a PyPI account and a one-time OIDC trusted
+   publisher configuration; no API token belongs in GitHub Actions.
+6. Create and push a release tag:
+
+   ```bash
+   git tag v0.3.0
+   git push origin v0.3.0
+   ```
+
+7. The tag workflow builds and uploads the distributions to PyPI. Confirm the
+   release page and install it in a clean environment:
+
+   ```bash
+   pipx install codex-provider-switcher
+   cps --version
+   ```
+
+The maintainer must complete the PyPI account, project ownership, trusted
+publisher, and release-tag steps manually.

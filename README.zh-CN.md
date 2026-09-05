@@ -1,312 +1,156 @@
-# Codex Provider Switcher
+# Codex Provider Switcher：切换 provider 也不丢会话历史
 
 [English](README.md)
 
-Codex Provider Switcher 是一个支持 Windows 和 macOS 的小工具，用于在 Codex Desktop 的官方 ChatGPT 订阅模式和 OpenAI 兼容第三方 API provider 之间一键切换。
+Codex Desktop 用量达到限制后，切换到第三方 OpenAI 兼容 API，常见结果是项目侧边栏变空，或者原来的对话显示在错误项目下。本工具的核心不是改几行 `config.toml`，而是同步 Codex Desktop 的会话索引和元数据，让切换 provider 后仍能看到原有项目会话。
 
-当前默认第三方 provider 为 APIMaster：
+## 问题根因
 
-```text
-https://apimaster.ai/v1
-```
+Codex Desktop 的会话列表同时依赖 `state_5.sqlite` 和
+`sessions/rollout-*.jsonl` 第一行的 `session_meta`。如果配置文件里的
+provider 已经切换，但这些文件中的 `model_provider` 没有同步，就会出现
+“codex desktop history disappeared”“codex conversations missing after
+switching provider”“codex usage limit reached”之后侧边栏空白等现象。
 
-它还会同步 Codex Desktop 的历史会话元数据，避免切换 provider 后项目侧边栏看不到旧对话。
+## 工具做什么
 
-## 为什么需要它
+切换前自动备份 Codex 状态，然后更新 SQLite 线程索引、JSONL 会话元数据和
+项目 workspace hints。Windows 下还会去掉 `\\?\` 工作目录前缀。`repair-history`
+只修复历史，不切换当前 profile。
 
-Codex Desktop 官方订阅可能会遇到 5 小时滚动限额。限额到了以后，你可以用这个工具切换到 APIMaster.ai 的三方 API key，并且继续在原来的项目对话里工作。
+## 安装
 
-等官方订阅限额恢复后，你可以再切回 Codex 官方订阅模式。工具会双向同步历史会话元数据，让同一批项目对话在 APIMaster 和官方订阅之间无缝切换。
-
-## 语言
-
-程序运行输出仅支持英文。这样可以避免 Windows 控制台、PowerShell 和系统代码页差异导致的编码错误。中文内容仅保留在文档中。
-
-## 功能
-
-- 切换到 APIMaster API key 模式
-- 切回官方 ChatGPT 订阅配置
-- 在两种模式之间保持项目历史对话可见
-- 保存并复用官方配置和 APIMaster 认证
-- 修复 Codex Desktop 项目侧边栏历史会话
-- 同步 `state_5.sqlite` 和 `sessions/rollout-*.jsonl` 中的 `model_provider`
-- 修复旧版本留下的 `\\?\` 工作目录路径前缀
-- 修改 Codex Desktop 状态前自动备份
-- Windows 通过 PowerShell 支持，macOS 通过 Python CLI 支持
-
-## 适用环境
-
-- Windows 或 macOS
-- Codex Desktop
-- Python 3
-- PowerShell，仅 Windows `.ps1` 和 `.bat` 入口需要
-
-Python 用于安全修改 Codex Desktop 的 SQLite 状态库和 JSONL 会话元数据。
-
-## 快速开始
-
-请先完全退出 Codex Desktop。
-
-### 安装全局命令
-
-推荐的 macOS/Linux 安装方式只需要 Python 3 和 curl 或 wget，不需要 pip：
+PyPI：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.2.4/install.sh | sh
+python -m pip install codex-provider-switcher
 ```
 
-root 用户会安装到 `/usr/local/bin`，普通用户会安装到 `~/.local/bin`。
-
-安装后可以在任意目录启动交互菜单：
+pipx：
 
 ```bash
-codex-provider-switcher
+pipx install codex-provider-switcher
 ```
 
-也可以直接执行子命令：
+Homebrew（tap 发布后）：
 
 ```bash
-codex-provider-switcher status
-codex-provider-switcher apimaster
-codex-provider-switcher official
+brew tap RomaCredit/codex
+brew install codex-provider-switcher
 ```
 
-Python 用户也可以选择使用 [pipx](https://pipx.pypa.io/)：
+源码安装：
 
 ```bash
-pipx install git+https://github.com/RomaCredit/codex-provider-switcher.git
+git clone https://github.com/RomaCredit/codex-provider-switcher.git
+cd codex-provider-switcher
+python3 -m pip install .
 ```
 
-Windows PowerShell 一键安装：
+Windows PowerShell：
 
 ```powershell
 irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/main/install.ps1 | iex
 ```
 
-升级或卸载 pipx 安装：
+## 快速开始
+
+操作前请完全退出 Codex Desktop：
 
 ```bash
-pipx upgrade codex-provider-switcher
-pipx uninstall codex-provider-switcher
+cps profile list
+cps status
+cps use openrouter
+cps use official
+cps repair-history
 ```
 
-### 从克隆的仓库直接运行
+`codex-provider-switcher` 仍然是等价的命令名。
 
-Windows 双击：
+## Profiles 配置
 
-```bat
-codex-provider-menu.bat
-```
-
-macOS 运行：
-
-```bash
-chmod +x ./codex-provider-menu.command
-./codex-provider-menu.command
-```
-
-英文菜单选项：
+首次运行会创建：
 
 ```text
-1. Switch to APIMaster and sync history
-2. Switch to official subscription and sync history
-3. Show status
-4. Test APIMaster /v1/models
-5. Save current profile as official
-6. Repair Desktop history list
-0. Exit
+macOS/Linux: ~/.codex-provider-switcher/profiles.toml
+Windows:     %USERPROFILE%\.codex-provider-switcher\profiles.toml
 ```
 
-推荐流程：
+默认包含三个普通 profile：
 
-1. 完全退出 Codex Desktop
-2. 运行菜单脚本
-3. 选择目标 provider 模式
-4. 等脚本完成
-5. 重新打开 Codex Desktop
+```toml
+[profiles.official]
+type = "subscription"
 
-## 命令行用法
+[profiles.apimaster]
+type = "api"
+base_url = "https://apimaster.ai/v1"
+default_model = "gpt-5.6-sol"
 
-### 跨平台 Python CLI
+[profiles.openrouter]
+type = "api"
+base_url = "https://openrouter.ai/api/v1"
+default_model = "anthropic/claude-sonnet-4.6"
+```
 
-查看当前状态：
+它们和用户自己添加的 profile 使用同一套逻辑，都可以修改或删除：
 
 ```bash
-python3 codex_provider_switcher.py status
+cps profile add local
+cps profile remove local
+cps profile test openrouter
 ```
 
-切换到 APIMaster：
+API key 不写入 `profiles.toml`。macOS 优先使用 Keychain，Windows 优先使用
+Credential Manager；系统密钥库不可用时回退到 `credentials.toml`，POSIX 下权限
+为 `0600`。
+任意 OpenAI 兼容端点都可以写成 API profile；OpenRouter 和 APIMaster 只是随包
+提供的两个普通预设，没有额外的代码分支。
 
-```bash
-python3 codex_provider_switcher.py apimaster
-```
-
-显式传入 key、模型和 base URL：
-
-```bash
-python3 codex_provider_switcher.py apimaster \
-  --api-key "YOUR_APIMASTER_KEY" \
-  --model "gpt-5.5" \
-  --base-url "https://apimaster.ai/v1"
-```
-
-切回官方 ChatGPT 订阅配置：
-
-```bash
-python3 codex_provider_switcher.py official
-```
-
-只修复历史，不切换 provider：
-
-```bash
-python3 codex_provider_switcher.py repair-history
-```
-
-使用非默认 Codex home 目录做测试：
-
-```bash
-python3 codex_provider_switcher.py status --codex-home "/tmp/fake-codex-home"
-```
-
-### Windows PowerShell CLI
-
-查看当前状态：
-
-```powershell
-.\switch-codex-provider.ps1 status
-```
-
-切换到 APIMaster。如果没有保存过 APIMaster key，脚本会提示输入：
-
-```powershell
-.\switch-codex-provider.ps1 apimaster
-```
-
-显式传入 key、模型和 base URL：
-
-```powershell
-.\switch-codex-provider.ps1 apimaster `
-  -ApiKey "YOUR_APIMASTER_KEY" `
-  -Model "gpt-5.5" `
-  -BaseUrl "https://apimaster.ai/v1"
-```
-
-切回官方 ChatGPT 订阅配置：
-
-```powershell
-.\switch-codex-provider.ps1 official
-```
-
-## 它会修改什么
-
-Windows 默认读写：
-
-- `%USERPROFILE%\.codex\config.toml`
-- `%USERPROFILE%\.codex\auth.json`
-- `%USERPROFILE%\.codex\.codex-global-state.json`
-- `%USERPROFILE%\.codex\state_5.sqlite`
-- `%USERPROFILE%\.codex\sessions\...\rollout-*.jsonl`
-
-macOS 默认读写：
-
-- `~/.codex/config.toml`
-- `~/.codex/auth.json`
-- `~/.codex/.codex-global-state.json`
-- `~/.codex/state_5.sqlite`
-- `~/.codex/sessions/.../rollout-*.jsonl`
-
-它不会删除对话内容。历史修复只更新 Codex Desktop 用来关联项目和 provider 的元数据。
-
-## 备份
-
-Windows 备份目录：
+## 命令
 
 ```text
-%USERPROFILE%\.codex\provider-switcher
+cps use <profile>              切换 profile 并修复历史
+cps status                     显示当前 profile、模型和凭据状态
+cps profile list               列出 profile
+cps profile add <name>         交互式添加
+cps profile remove <name>      删除 profile
+cps profile test <name>        请求该 API 的 /v1/models
+cps repair-history             只修复历史
 ```
 
-macOS 备份目录：
-
-```text
-~/.codex/provider-switcher
-```
-
-常见备份文件：
-
-- `config.<timestamp>.toml.bak`
-- `auth.<timestamp>.json.bak`
-- `global-state.<timestamp>.json.bak`
-- `state_5.<timestamp>.sqlite.bak`
-- `session-meta.<timestamp>.bak/...`
-
-## 为什么需要同步历史
-
-Codex Desktop 的项目侧边栏历史不只依赖会话文件本身，还可能使用：
-
-- 全局项目提示：`.codex-global-state.json`
-- SQLite 线程索引：`state_5.sqlite`
-- JSONL 第一行会话元数据：`sessions/rollout-*.jsonl`
-
-其中 `model_provider` 会影响侧边栏过滤或重建行为。如果只切换 `config.toml` 和 `auth.json`，旧会话仍可能停留在 `openai` 或 `custom` provider 下，于是切到 APIMaster 后项目里看不到旧对话。
-
-本工具会把 provider 元数据同步到当前模式：
-
-- APIMaster 模式：`apimaster`
-- 官方订阅模式：`openai`
-
-## macOS 注意事项
-
-macOS 上请在切换前完全退出 Codex Desktop。
-
-如果 `.command` 文件下载后无法执行，请运行：
+旧命令仍可用，但会提示迁移：
 
 ```bash
-chmod +x ./codex-provider-menu.command
+cps apimaster   # 等价于 cps use apimaster
+cps official    # 等价于 cps use official
 ```
 
-## 回滚
+## 故障排查
 
-如需回滚，请完全退出 Codex Desktop，然后从 `provider-switcher` 备份目录手动恢复对应时间戳的备份。
-
-## 安全说明
-
-- API key 只保存在本机
-- 不会上传文件
-- 不会修改 Codex 安装目录
-- 不会删除对话文件
-- 修改 SQLite 和 JSONL 前会先备份
-
-不要在公开 issue 中上传真实 `.codex` 文件。里面可能包含密钥或私有工作目录路径。
-
-## 限制
-
-- 仅支持 Codex Desktop
-- Codex Desktop 内部状态结构可能随版本变化。如果未来升级后历史异常，请先运行 `repair-history`
-- 官方订阅配置需要先在 Codex Desktop 中登录成功，然后运行 `save-official` 或至少从官方模式切换到 APIMaster 一次
-
-## 开发
-
-本项目使用标准 Python 打包方式，没有额外的自定义构建步骤。
-
-核心文件：
-
-- `codex_provider_switcher.py`
-- `switch-codex-provider.ps1`
-- `codex-provider-menu.bat`
-- `codex-provider-menu.command`
-
-基本检查：
+遇到 “codex desktop sidebar empty”、`codex model_provider mismatch`，或者
+切换 provider 后出现 “codex conversations missing after switching provider”，
+请完全退出 Codex Desktop 后执行：
 
 ```bash
-python3 -m unittest discover -s tests -v
-python3 -m pip install .
-codex-provider-switcher --version
+cps repair-history
 ```
 
-```powershell
-.\switch-codex-provider.ps1 status
+API 探测失败时检查 `base_url` 和凭据：
+
+```bash
+cps profile test openrouter
+cps status
 ```
+
+网络探测只会访问用户明确配置的 provider 的 `/v1/models`，不会上传本地文件。
+
+## 安全
+
+修改前会生成带时间戳的备份；不会删除对话正文，不会输出完整 API key，不会收集
+任何遥测数据，也不会向第三方发送请求，唯一例外是用户主动执行的 `/v1/models`
+连通性探测。
 
 ## 许可证
 
-MIT. See [LICENSE](LICENSE).
+MIT，见 [LICENSE](LICENSE)。

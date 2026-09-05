@@ -1,0 +1,30 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/codex-provider-switcher
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Build distributions
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build
+      - name: Check distributions
+        run: twine check dist/*
+      - name: Publish distributions
+        uses: pypa/gh-action-pypi-publish@release/v1

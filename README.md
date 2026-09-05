@@ -1,344 +1,159 @@
-# Codex Provider Switcher
+# Codex Provider Switcher: keep Codex Desktop history visible
 
 [中文文档](README.zh-CN.md)
 
-Codex Provider Switcher is a small Windows and macOS utility for switching Codex Desktop between the official ChatGPT subscription profile and an OpenAI-compatible third-party API provider.
+When Codex Desktop hits a usage limit and you switch to an OpenAI-compatible
+endpoint, the project sidebar can become empty or show the wrong conversations.
+This tool switches provider profiles **and repairs the session history metadata**
+that Codex Desktop uses to index those conversations. It addresses the common
+cases described as “codex desktop history disappeared”, “codex conversations
+missing after switching provider”, and “codex usage limit reached”.
 
-The default third-party provider is APIMaster:
+## The problem
 
-```text
-https://apimaster.ai/v1
-```
+Changing `config.toml` alone does not update the provider value stored in
+`state_5.sqlite` and the first `session_meta` line in
+`sessions/rollout-*.jsonl`. That `model_provider` mismatch can make the
+Codex Desktop sidebar empty even though the conversation files still exist.
 
-The tool also synchronizes Codex Desktop conversation history metadata, so project sidebar conversations remain visible after switching provider modes.
+## What this does
 
-## Why This Exists
+The tool backs up Codex state, switches a profile, synchronizes provider values
+in both stores, repairs project workspace hints, and normalizes Windows
+`\\?\` paths. `repair-history` runs the metadata repair without changing the
+active profile.
 
-Codex Desktop official subscription usage can hit its rolling usage limit. When that happens, this tool lets you switch to an APIMaster.ai third-party API key and keep working in the same project conversations.
+## Install
 
-When the official subscription limit resets, you can switch back to the official Codex subscription profile. Conversation history metadata is synchronized in both directions, so the same project threads remain visible and usable across provider modes.
-
-## Language
-
-Runtime output is English-only to avoid Windows console and PowerShell encoding issues. Chinese documentation is available in [README.zh-CN.md](README.zh-CN.md).
-
-## Features
-
-- Switch to APIMaster API-key mode.
-- Switch back to the official ChatGPT subscription profile.
-- Keep project conversation history available across both modes.
-- Save and reuse official and APIMaster auth profiles.
-- Repair Codex Desktop project sidebar conversation history.
-- Synchronize `model_provider` in both `state_5.sqlite` and `sessions/rollout-*.jsonl`.
-- Normalize old `\\?\` working-directory path prefixes.
-- Create backups before modifying Codex Desktop state.
-- Support Windows through PowerShell and macOS through the Python CLI.
-
-## Requirements
-
-- Windows or macOS
-- Codex Desktop
-- Python 3
-- PowerShell, only for the Windows `.ps1` and `.bat` entry points
-
-Python is used to safely update Codex Desktop SQLite state and JSONL session metadata.
-
-## Quick Start
-
-Fully quit Codex Desktop first.
-
-### Install the global command
-
-The recommended macOS/Linux installer only requires Python 3 and either curl or wget. It does not require pip:
+PyPI:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.2.4/install.sh | sh
+python -m pip install codex-provider-switcher
 ```
 
-Root users install to `/usr/local/bin`. Regular users install to `~/.local/bin`.
-
-Launch the interactive menu from any directory:
+pipx:
 
 ```bash
-codex-provider-switcher
+pipx install codex-provider-switcher
 ```
 
-Or run a command directly:
+Homebrew (when the tap is published):
 
 ```bash
-codex-provider-switcher status
-codex-provider-switcher apimaster
-codex-provider-switcher official
+brew tap RomaCredit/codex
+brew install codex-provider-switcher
 ```
 
-Python users can alternatively install with [pipx](https://pipx.pypa.io/):
+macOS/Linux from source:
 
 ```bash
-pipx install git+https://github.com/RomaCredit/codex-provider-switcher.git
+git clone https://github.com/RomaCredit/codex-provider-switcher.git
+cd codex-provider-switcher
+python3 -m pip install .
 ```
 
-One-line installer for Windows PowerShell:
+Windows PowerShell:
 
 ```powershell
 irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/main/install.ps1 | iex
 ```
 
-Upgrade or uninstall a pipx installation:
+## Quick start
+
+Fully quit Codex Desktop before changing its files:
 
 ```bash
-pipx upgrade codex-provider-switcher
-pipx uninstall codex-provider-switcher
+cps profile list
+cps status
+cps use openrouter
+cps use official
+cps repair-history
 ```
 
-### Run directly from a cloned repository
+`codex-provider-switcher` remains an equivalent executable name.
 
-On Windows, double-click:
+## Profiles
 
-```bat
-codex-provider-menu.bat
+The first run creates `~/.codex-provider-switcher/profiles.toml` (Windows:
+`%USERPROFILE%\.codex-provider-switcher\profiles.toml`) with three ordinary
+profiles:
+
+```toml
+[profiles.official]
+type = "subscription"
+
+[profiles.apimaster]
+type = "api"
+base_url = "https://apimaster.ai/v1"
+default_model = "gpt-5.6-sol"
+
+[profiles.openrouter]
+type = "api"
+base_url = "https://openrouter.ai/api/v1"
+default_model = "anthropic/claude-sonnet-4.6"
 ```
 
-On macOS, run:
+Built-in profiles can be edited, removed, or replaced like any custom profile:
 
 ```bash
-chmod +x ./codex-provider-menu.command
-./codex-provider-menu.command
+cps profile add local
+cps profile remove local
+cps profile test openrouter
 ```
 
-Menu options:
+`profile add` prompts for the type, base URL, model, and API key. Keys are not
+stored in `profiles.toml`: macOS uses Keychain when available, Windows uses the
+Credential Manager integration when available, and the fallback
+`credentials.toml` is restricted to the current user (`0600` on POSIX).
+Any OpenAI-compatible endpoint can be represented by an API profile; OpenRouter
+is included as a neutral example, alongside the APIMaster preset.
 
-```text
-1. Switch to APIMaster and sync history
-2. Switch to official subscription and sync history
-3. Show status
-4. Test APIMaster /v1/models
-5. Save current profile as official
-6. Repair Desktop history list
-0. Exit
-```
+## How it works
 
-Recommended flow:
+Before a switch, timestamped backups are written below the Codex
+`provider-switcher` directory. The SQLite `threads.model_provider` values and
+the JSONL `session_meta.payload.model_provider` values are changed to the
+active API profile name, or to Codex's `openai` value for a subscription
+profile. Workspace hints are rebuilt from session metadata and extended Windows
+paths are normalized.
 
-1. Fully quit Codex Desktop.
-2. Run `codex-provider-menu.bat`.
-3. Choose the target provider mode.
-4. Wait for the script to finish.
-5. Reopen Codex Desktop.
+The tool never rewrites conversation content. It only updates the index and
+metadata fields needed by Codex Desktop.
 
-## CLI Usage
+## Troubleshooting
 
-### Cross-Platform Python CLI
-
-Show current status:
+If you see “codex desktop sidebar empty”, “codex model_provider mismatch”, or
+“codex conversations missing after switching provider”, quit Codex Desktop and
+run:
 
 ```bash
-python3 codex_provider_switcher.py status
+cps repair-history
 ```
 
-Switch to APIMaster:
+If the provider test fails, verify the profile `base_url` and credentials:
 
 ```bash
-python3 codex_provider_switcher.py apimaster
+cps profile test openrouter
+cps status
 ```
 
-Switch to APIMaster with explicit key, model, and base URL:
+The connectivity check only requests the configured provider's `/v1/models`
+endpoint (a base URL ending in `/v1` is expected).
+
+## Safety
+
+The tool creates backups before changing Codex files, never deletes
+conversation content, and never logs a complete API key. It collects no
+telemetry and sends no requests to third parties except the `/v1/models`
+probe explicitly requested by the user.
+
+## Compatibility
+
+The old commands remain available with a deprecation message:
 
 ```bash
-python3 codex_provider_switcher.py apimaster \
-  --api-key "YOUR_APIMASTER_KEY" \
-  --model "gpt-5.5" \
-  --base-url "https://apimaster.ai/v1"
-```
-
-Switch back to the official ChatGPT subscription profile:
-
-```bash
-python3 codex_provider_switcher.py official
-```
-
-Repair history without switching provider:
-
-```bash
-python3 codex_provider_switcher.py repair-history
-```
-
-Use a non-default Codex home directory for testing:
-
-```bash
-python3 codex_provider_switcher.py status --codex-home "/tmp/fake-codex-home"
-```
-
-### Windows PowerShell CLI
-
-Show current status:
-
-```powershell
-.\switch-codex-provider.ps1 status
-```
-
-Switch to APIMaster. If no APIMaster key has been saved, the script will prompt for it:
-
-```powershell
-.\switch-codex-provider.ps1 apimaster
-```
-
-Switch to APIMaster with explicit key, model, and base URL:
-
-```powershell
-.\switch-codex-provider.ps1 apimaster `
-  -ApiKey "YOUR_APIMASTER_KEY" `
-  -Model "gpt-5.5" `
-  -BaseUrl "https://apimaster.ai/v1"
-```
-
-Switch back to the official ChatGPT subscription profile:
-
-```powershell
-.\switch-codex-provider.ps1 official
-```
-
-Repair history without switching provider:
-
-```powershell
-.\switch-codex-provider.ps1 repair-history
-```
-
-Test APIMaster `/models`:
-
-```powershell
-.\switch-codex-provider.ps1 test
-```
-
-Save the current Codex config/auth as the official profile:
-
-```powershell
-.\switch-codex-provider.ps1 save-official
-```
-
-Use a non-default Codex home directory for testing:
-
-```powershell
-.\switch-codex-provider.ps1 status -CodexHome "D:\tmp\fake-codex-home"
-```
-
-## What It Modifies
-
-By default, the tool reads and writes:
-
-On Windows:
-
-- `%USERPROFILE%\.codex\config.toml`
-- `%USERPROFILE%\.codex\auth.json`
-- `%USERPROFILE%\.codex\.codex-global-state.json`
-- `%USERPROFILE%\.codex\state_5.sqlite`
-- `%USERPROFILE%\.codex\sessions\...\rollout-*.jsonl`
-
-On macOS:
-
-- `~/.codex/config.toml`
-- `~/.codex/auth.json`
-- `~/.codex/.codex-global-state.json`
-- `~/.codex/state_5.sqlite`
-- `~/.codex/sessions/.../rollout-*.jsonl`
-
-It does not delete conversation content. The history repair only updates metadata used by Codex Desktop to associate threads with projects and providers.
-
-## Backups
-
-Backups are written to:
-
-Windows:
-
-```text
-%USERPROFILE%\.codex\provider-switcher
-```
-
-macOS:
-
-```text
-~/.codex/provider-switcher
-```
-
-Typical backup files:
-
-- `config.<timestamp>.toml.bak`
-- `auth.<timestamp>.json.bak`
-- `global-state.<timestamp>.json.bak`
-- `state_5.<timestamp>.sqlite.bak`
-- `session-meta.<timestamp>.bak\...`
-
-## Why History Sync Is Needed
-
-Codex Desktop project sidebar history is not based only on the session files. It may also use:
-
-- Global project hints: `.codex-global-state.json`
-- SQLite thread index: `state_5.sqlite`
-- The first-line session metadata in `sessions/rollout-*.jsonl`
-
-The `model_provider` value can affect sidebar filtering or backfill behavior. If only `config.toml` and `auth.json` are switched, old conversations may remain under `openai` or `custom`, so they can disappear when the current mode is APIMaster.
-
-This tool synchronizes provider metadata to the current mode:
-
-- APIMaster mode: `apimaster`
-- Official subscription mode: `openai`
-
-## Rollback
-
-To roll back, fully quit Codex Desktop and manually restore the relevant timestamped backup files from:
-
-```text
-%USERPROFILE%\.codex\provider-switcher
-```
-
-## Security Notes
-
-- API keys are stored only on the local machine.
-- The tool does not upload files.
-- The tool does not modify the Codex installation directory.
-- The tool does not delete conversation files.
-- SQLite and JSONL state files are backed up before modification.
-
-Do not share real `.codex` files in public issues. They may contain secrets or private workspace paths.
-
-## Platform Notes
-
-The Python CLI is the primary cross-platform implementation and supports Windows and macOS.
-
-The PowerShell script and `.bat` menus are kept for Windows users who prefer a native double-click workflow.
-
-On macOS, Codex Desktop should be fully quit before switching. If the `.command` file does not run after download, use:
-
-```bash
-chmod +x ./codex-provider-menu.command
-```
-
-## Limitations
-
-- Codex Desktop only.
-- Codex Desktop internal state may change between versions. If a future update breaks history display, run `repair-history` first.
-- The official subscription profile must exist locally. Sign in to Codex Desktop first, then run `save-official` or switch from official to APIMaster once.
-
-## Development
-
-This project uses standard Python packaging and has no custom build step.
-
-Core files:
-
-- `codex_provider_switcher.py`
-- `switch-codex-provider.ps1`
-- `codex-provider-menu.bat`
-- `codex-provider-menu.command`
-
-Basic checks:
-
-```powershell
-.\switch-codex-provider.ps1 status
-```
-
-```bash
-python3 -m unittest discover -s tests -v
-python3 -m pip install .
-codex-provider-switcher --version
+cps apimaster   # equivalent to cps use apimaster
+cps official    # equivalent to cps use official
 ```
 
 ## License

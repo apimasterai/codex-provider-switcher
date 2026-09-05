@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Replace hard-coded provider branches with user-editable profiles in `profiles.toml`.
+- Add `cps use`, `cps status`, `cps profile`, and `cps repair-history`.
+- Add built-in official, APIMaster, and OpenRouter profiles with the same configuration-driven behavior as custom profiles.
+- Store API keys in macOS Keychain when available and otherwise in a local credentials file with restricted permissions.
+- Keep `apimaster` and `official` as deprecated compatibility aliases.
+- Prepare the package for PyPI publishing and trusted publishing from version tags.
+
 ## 0.2.4
 
 - Pin standalone installation downloads to a version tag instead of the cache-prone `main` branch.

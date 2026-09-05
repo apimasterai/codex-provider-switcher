@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="v0.2.4"
+VERSION="v0.3.0"
 SCRIPT_URL="https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/${VERSION}/codex_provider_switcher.py"
 
 if ! command -v python3 >/dev/null 2>&1; then
