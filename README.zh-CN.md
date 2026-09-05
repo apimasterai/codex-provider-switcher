@@ -20,38 +20,92 @@ switching provider”“codex usage limit reached”之后侧边栏空白等现�
 
 ## 安装
 
-PyPI：
+需要 **Python 3.10 或更高版本**。请使用平时运行 Codex 的系统用户操作，避免
+root 和普通用户读到不同的配置及历史目录。
+
+### Linux / macOS：独立安装脚本
+
+Ubuntu 服务器可以直接用下面的命令安装，无须先创建虚拟环境。脚本从 GitHub
+下载发布版本的 Python 源文件，不调用 pip，也不修改系统 Python 的包，因此
+不会触发 `externally-managed-environment`。机器上仍需已有 Python 3.10+
+和 `curl` 或 `wget`；它不是自带 Python 的二进制程序。
 
 ```bash
-python -m pip install codex-provider-switcher
+curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.1/install.sh | sh
+cps --version
 ```
 
-pipx：
+安装后同时提供 `cps` 和 `codex-provider-switcher`，不需要手动创建软链接。
+重复运行会重装指定版本；升级时使用新版本的安装脚本地址即可。
+安装过程不会切换 provider，也不会修改 Codex 配置或历史。
+
+| 执行用户 | 命令目录 | 程序目录 |
+| --- | --- | --- |
+| 普通用户 | `~/.local/bin/` | `~/.local/share/codex-provider-switcher/` |
+| root | `/usr/local/bin/` | `/usr/local/lib/codex-provider-switcher/` |
+
+普通用户安装后若提示 `cps: command not found`，先执行：
 
 ```bash
-pipx install codex-provider-switcher
+export PATH="$HOME/.local/bin:$PATH"
+cps --version
 ```
 
-Homebrew（tap 发布后）：
+确认能运行后，把 PATH 设置加入对应 shell 的配置文件，以便下次登录生效。
+安装器只输出提示，不会擅自修改 `.bashrc` 或 `.zshrc`。
+
+可通过 `CODEX_SWITCHER_BIN_DIR` 和 `CODEX_SWITCHER_DATA_DIR` 自定义目录。
+需要安装其他 tag 时，注意版本变量应传给管道右侧的 **`sh`**：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.1/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
+```
+
+### PyPI
+
+在虚拟环境或允许 pip 管理的 Python 环境中，直接安装即可：
+
+```bash
+python -m pip install --upgrade codex-provider-switcher
+```
+
+如果 Ubuntu/Debian 提示 `externally-managed-environment`，这是系统 Python
+的 PEP 668 保护，并非包不支持安装。改用上面的独立安装脚本、pipx 或虚拟环境；
+`pip install --user` 同样可能受限，不建议用 `--break-system-packages` 强行绕过。
+
+### Homebrew
 
 ```bash
 brew tap RomaCredit/codex
 brew install codex-provider-switcher
 ```
 
-源码安装：
+### pipx
+
+机器已安装 pipx 时：
+
+```bash
+pipx install codex-provider-switcher
+```
+
+### 源码安装
 
 ```bash
 git clone https://github.com/RomaCredit/codex-provider-switcher.git
 cd codex-provider-switcher
-python3 -m pip install .
+python3 -m venv .venv
+.venv/bin/python -m pip install .
+.venv/bin/cps --version
 ```
 
-Windows PowerShell：
+### Windows PowerShell
 
 ```powershell
 irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/main/install.ps1 | iex
 ```
+
+Linux 服务器上的安装只处理该服务器能访问的 Codex 数据，不会远程修复另一台
+Windows/macOS 电脑上的 Desktop 侧边栏。
 
 ## 快速开始
 

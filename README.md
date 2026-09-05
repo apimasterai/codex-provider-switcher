@@ -25,38 +25,92 @@ active profile.
 
 ## Install
 
-PyPI:
+Requires **Python 3.10 or newer**. Use the same OS user that runs Codex so the
+tool accesses the correct configuration and history.
+
+### macOS / Linux standalone installer
+
+This installs the released Python source from GitHub without using pip or
+modifying system Python packages. It works on Ubuntu/Debian with PEP 668 enabled;
+it still requires an existing Python 3.10+ installation and `curl` or `wget`.
 
 ```bash
-python -m pip install codex-provider-switcher
+curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.1/install.sh | sh
+cps --version
 ```
 
-pipx:
+Both `cps` and `codex-provider-switcher` are installed. No manual symlink is needed.
+Rerun the command to reinstall that version; use a newer release's installer URL
+to upgrade. Installation does not switch providers or touch Codex data.
+
+| Run as | Commands | Program |
+| --- | --- | --- |
+| Regular user | `~/.local/bin/` | `~/.local/share/codex-provider-switcher/` |
+| root | `/usr/local/bin/` | `/usr/local/lib/codex-provider-switcher/` |
+
+If `cps` is not found after a user installation:
 
 ```bash
-pipx install codex-provider-switcher
+export PATH="$HOME/.local/bin:$PATH"
+cps --version
 ```
 
-Homebrew (when the tap is published):
+Add that PATH setting to your shell configuration for future sessions. The
+installer prints the appropriate setting but does not edit your shell files.
+
+Set `CODEX_SWITCHER_BIN_DIR` and `CODEX_SWITCHER_DATA_DIR` to customize the
+directories. For a different version, set the variable on **`sh`**, not on `curl`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.1/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
+```
+
+### PyPI
+
+Direct pip installation is supported in a virtual environment or another
+pip-managed Python environment:
+
+```bash
+python -m pip install --upgrade codex-provider-switcher
+```
+
+If Ubuntu/Debian reports `externally-managed-environment`, use the standalone
+installer above, pipx, or a virtual environment. `pip install --user` may also
+be blocked by PEP 668; do not disable this protection with `--break-system-packages`.
+
+### Homebrew
 
 ```bash
 brew tap RomaCredit/codex
 brew install codex-provider-switcher
 ```
 
-macOS/Linux from source:
+### pipx
+
+With pipx installed:
+
+```bash
+pipx install codex-provider-switcher
+```
+
+### From source
 
 ```bash
 git clone https://github.com/RomaCredit/codex-provider-switcher.git
 cd codex-provider-switcher
-python3 -m pip install .
+python3 -m venv .venv
+.venv/bin/python -m pip install .
+.venv/bin/cps --version
 ```
 
-Windows PowerShell:
+### Windows PowerShell
 
 ```powershell
 irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/main/install.ps1 | iex
 ```
+
+Linux server installations operate on that server's local Codex data only.
+They do not repair the Desktop sidebar on a separate Windows/macOS computer.
 
 ## Quick start
 

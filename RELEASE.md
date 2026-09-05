@@ -1,6 +1,7 @@
 # Release checklist
 
-1. Update the version in `pyproject.toml` and `codex_provider_switcher.py`.
+1. Update the version in `pyproject.toml`, `codex_provider_switcher.py`, and
+   the default tag in `install.sh`.
 2. Update `CHANGELOG.md`, run the test suite, and review the generated diff.
 3. Build source and wheel distributions:
 
@@ -20,8 +21,8 @@
 6. Create and push a release tag:
 
    ```bash
-   git tag v0.3.0
-   git push origin v0.3.0
+   git tag v0.3.1
+   git push origin v0.3.1
    ```
 
 7. The tag workflow builds and uploads the distributions to PyPI. Confirm the

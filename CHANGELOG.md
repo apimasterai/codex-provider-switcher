@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.1
+
+- Make the standalone macOS/Linux installer provide both `cps` and
+  `codex-provider-switcher` commands.
+- Validate that the installer is running with Python 3.10 or newer.
+- Allow reproducible installer overrides with `CODEX_SWITCHER_VERSION`.
+- Validate downloaded source syntax and version before replacing the installed program.
+- Handle custom paths safely, clean up temporary files, and reject directory conflicts.
+- Add offline installer integration tests and run tests before publishing to PyPI.
+- Document standalone installation without system pip, including Ubuntu PEP 668,
+  user/root installation paths, and the now-published Homebrew tap.
+
 ## 0.3.0
 
 - Replace hard-coded provider branches with user-editable profiles in `profiles.toml`.

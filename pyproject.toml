@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "codex-provider-switcher"
-version = "0.3.0"
+version = "0.3.1"
 description = "Keep Codex Desktop conversation history visible while switching provider profiles."
 readme = "README.md"
 requires-python = ">=3.10"
