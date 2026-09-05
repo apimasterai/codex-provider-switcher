@@ -1,7 +1,7 @@
 # Release checklist
 
 1. Update the version in `pyproject.toml`, `codex_provider_switcher.py`, and
-   the default tag in `install.sh`.
+   the default tag in `install.sh`. Update the versioned URLs in both READMEs.
 2. Update `CHANGELOG.md`, run the test suite, and review the generated diff.
 3. Build source and wheel distributions:
 
@@ -25,13 +25,17 @@
    git push origin v0.3.1
    ```
 
-7. The tag workflow builds and uploads the distributions to PyPI. Confirm the
-   release page and install it in a clean environment:
+7. The tag workflow runs the tests, downloads the tagged standalone program to
+   smoke-test both commands, then builds and uploads the distributions to PyPI.
+   Confirm the release page and install it in a clean environment:
 
    ```bash
    pipx install codex-provider-switcher
    cps --version
    ```
+
+8. Update the URL and SHA256 in `RomaCredit/homebrew-codex` for the new tag.
+   The SHA256 must be calculated from the downloaded archive, not the git commit.
 
 The maintainer must complete the PyPI account, project ownership, trusted
 publisher, and release-tag steps manually.

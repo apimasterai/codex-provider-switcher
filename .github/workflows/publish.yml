@@ -24,6 +24,13 @@ jobs:
         run: |
           sh -n install.sh
           python -m unittest discover -s tests -v
+      - name: Smoke-test standalone installer
+        run: |
+          CODEX_SWITCHER_BIN_DIR="$RUNNER_TEMP/cps-standalone/bin" \
+          CODEX_SWITCHER_DATA_DIR="$RUNNER_TEMP/cps-standalone/data" \
+            sh install.sh
+          "$RUNNER_TEMP/cps-standalone/bin/cps" --version
+          "$RUNNER_TEMP/cps-standalone/bin/codex-provider-switcher" --version
       - name: Build distributions
         run: |
           python -m pip install --upgrade build twine
