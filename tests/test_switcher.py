@@ -4,6 +4,7 @@ import os
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 from codex_provider_switcher import (
     CredentialStore,
@@ -59,8 +60,9 @@ class SwitcherTests(unittest.TestCase):
     def test_credentials_fallback_is_masked_and_private(self):
         with tempfile.TemporaryDirectory() as directory:
             store = CredentialStore(Path(directory))
-            store.set("local", "sk-1234567890")
-            self.assertEqual(store.get("local"), "sk-1234567890")
+            with patch.object(store, "_system_set", return_value=False), patch.object(store, "_system_get", return_value=None):
+                store.set("local", "sk-1234567890")
+                self.assertEqual(store.get("local"), "sk-1234567890")
             self.assertEqual(mask_secret("sk-1234567890"), "sk-1...7890")
             if os.name != "nt":
                 self.assertEqual((Path(directory) / "credentials.toml").stat().st_mode & 0o777, 0o600)
