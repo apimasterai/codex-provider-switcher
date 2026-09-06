@@ -1,2 +1,4 @@
 include install.sh
 include README.zh-CN.md
+include CITATION.cff CONTRIBUTING.md SECURITY.md RELEASE.md CHANGELOG.md install.ps1
+recursive-include .github *.yml

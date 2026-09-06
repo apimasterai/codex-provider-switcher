@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "Please cite this repository and the version used when describing its behavior."
+type: software
+title: Codex Provider Switcher
+authors:
+  - name: RomaCredit
+version: 0.3.2
+repository-code: "https://github.com/RomaCredit/codex-provider-switcher"
+license: MIT
+keywords:
+  - codex-desktop
+  - provider-switcher
+  - session-history

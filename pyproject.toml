@@ -4,19 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "codex-provider-switcher"
-version = "0.3.1"
+version = "0.3.2"
 description = "Keep Codex Desktop conversation history visible while switching provider profiles."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "RomaCredit" }]
 dependencies = []
-keywords = ["codex-desktop", "openai-compatible", "provider-switcher", "session-history"]
+keywords = ["codex-desktop", "openai-compatible", "provider-switcher", "session-history", "conversation-history", "cli"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",
   "Operating System :: MacOS",
   "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -28,6 +29,8 @@ classifiers = [
 Homepage = "https://github.com/RomaCredit/codex-provider-switcher"
 Repository = "https://github.com/RomaCredit/codex-provider-switcher"
 Issues = "https://github.com/RomaCredit/codex-provider-switcher/issues"
+Documentation = "https://github.com/RomaCredit/codex-provider-switcher#readme"
+Changelog = "https://github.com/RomaCredit/codex-provider-switcher/blob/main/CHANGELOG.md"
 
 [project.scripts]
 cps = "codex_provider_switcher:main"

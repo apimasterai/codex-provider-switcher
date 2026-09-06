@@ -1,0 +1,27 @@
+name: Desktop history issue
+description: Report a reproducible local history index or sidebar problem.
+title: "[History] "
+labels: ["history"]
+body:
+  - type: markdown
+    attributes:
+      value: "Never attach state_5.sqlite, rollout files, transcripts, backups, or credentials."
+  - type: input
+    id: versions
+    attributes:
+      label: Switcher, Codex Desktop, and OS versions
+    validations:
+      required: true
+  - type: textarea
+    id: symptoms
+    attributes:
+      label: Symptoms and reproducible steps
+      description: "Mention whether the conversation files still exist and which command was run."
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized status or repair output
+    validations:
+      required: true

@@ -1,44 +1,34 @@
 # Contributing
 
-Thanks for considering a contribution.
-
-## Development Setup
-
-This project is intentionally small and has no build step.
-
-Requirements:
-
-- Windows or macOS
-- PowerShell
-- Python 3
-- Codex Desktop, for real-world testing
-
-## Before Opening a Pull Request
-
-Please run:
+Use Python 3.10+ on Windows, macOS, or Linux. Runtime dependencies must remain
+standard-library only. Build/test tools belong in a virtual environment.
 
 ```bash
-python3 codex_provider_switcher.py status
+python -m venv .venv
+.venv/bin/python -m pip install -e .
+.venv/bin/python -m unittest discover -s tests -v
 ```
 
-On Windows, also run:
+On Windows use `.venv\Scripts\python.exe`. CI tests Python 3.10 and 3.13 on
+all three operating systems.
 
-```powershell
-.\switch-codex-provider.ps1 status
-```
+## Safe tests
 
-If your change touches history synchronization, test both directions:
+Use temporary directories, synthetic SQLite/JSONL fixtures, dummy credentials,
+and mocked or loopback HTTP responses. Do not switch your live provider or use
+real session files merely to run tests. Never commit keys, auth files, databases,
+backups, or private prompts. Never make billable provider requests in CI.
 
-```powershell
-.\switch-codex-provider.ps1 apimaster
-.\switch-codex-provider.ps1 official
-```
+For history changes, cover both provider directions, Windows path normalization,
+backups, and preservation of message content. Report which storage format and
+client version were actually reproduced; fixtures do not prove live compatibility.
 
-Use `-CodexHome` with a temporary fixture directory when possible, so tests do not have to touch your real Codex Desktop state.
+## Pull requests
 
-## Guidelines
+Explain the user-visible problem and include a regression test. Keep changes
+focused, preserve unrelated settings, and update both READMEs for command or
+safety changes. Keep runtime output English-only for Windows consoles.
+Installation examples must target the release version, not an unpinned branch.
 
-- Keep the tool dependency-light.
-- Keep all state mutations backed up before writing.
-- Avoid logging API keys or sensitive auth content.
-- Document any new Codex Desktop state file that the tool reads or writes.
+Use the issue forms for installation, provider compatibility, or history
+problems. Follow [SECURITY.md](SECURITY.md) for vulnerabilities; never post secrets.

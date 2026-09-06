@@ -1,0 +1,34 @@
+name: Installation problem
+description: Report a reproducible installation or packaging problem.
+title: "[Install] "
+labels: ["installation"]
+body:
+  - type: markdown
+    attributes:
+      value: "Please remove API keys, credentials, transcripts, and local database contents."
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "0.3.2"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: OS and Python
+      placeholder: "Ubuntu 24.04, Python 3.12"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Installation command and complete error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true

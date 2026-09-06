@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.2
+
+- Clarify local history repair, protocol requirements, billing, and tested scope.
+- Add bilingual navigation, troubleshooting answers, package metadata, and
+  links to releases and the separate Claude Code tool.
+- Add contribution guidance, issue forms, citation metadata, and release checks.
+- Pin the Windows installer's source archive and report package install failures.
+- Gate PyPI publishing on the three-OS/two-Python matrix.
+- Provider selection, history synchronization, and credential behavior are unchanged.
+
 ## 0.3.1
 
 - Make the standalone macOS/Linux installer provide both `cps` and

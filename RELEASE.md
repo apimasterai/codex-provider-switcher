@@ -21,8 +21,8 @@
 6. Create and push a release tag:
 
    ```bash
-   git tag v0.3.1
-   git push origin v0.3.1
+   git tag v0.3.2
+   git push origin v0.3.2
    ```
 
 7. The tag workflow runs the tests, downloads the tagged standalone program to
@@ -37,5 +37,12 @@
 8. Update the URL and SHA256 in `RomaCredit/homebrew-codex` for the new tag.
    The SHA256 must be calculated from the downloaded archive, not the git commit.
 
-The maintainer must complete the PyPI account, project ownership, trusted
-publisher, and release-tag steps manually.
+9. Create a GitHub Release with installation commands, changes, compatibility
+   limits, and the successful CI run.
+
+The PyPI owner must authorize owner `RomaCredit`, repository
+`codex-provider-switcher`, workflow `publish.yml`, environment `pypi`.
+Publishing is gated by the Windows/macOS/Linux Python 3.10/3.13 matrix.
+Manual dispatch is supported on version tags. For deliberate manual upload,
+use `python -m twine upload dist/*` from a clean output directory with a securely
+supplied scoped token. Never commit or print tokens.

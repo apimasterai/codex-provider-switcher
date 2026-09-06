@@ -1,0 +1,34 @@
+name: Provider compatibility
+description: Report a provider profile or protocol compatibility result.
+title: "[Provider] "
+labels: ["provider-compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include API keys or billable request/response content."
+  - type: input
+    id: version
+    attributes:
+      label: Switcher and Codex Desktop versions
+    validations:
+      required: true
+  - type: input
+    id: provider
+    attributes:
+      label: Provider and endpoint type
+      placeholder: "OpenAI-compatible Responses API"
+    validations:
+      required: true
+  - type: textarea
+    id: profile
+    attributes:
+      label: Sanitized profile fields
+      description: "Include type, base_url host/path, default_model, and wire_api. Redact tokens."
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Command, result, and expected behavior
+    validations:
+      required: true

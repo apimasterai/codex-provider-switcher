@@ -1,16 +1,28 @@
 # Codex Provider Switcher：切换 provider 也不丢会话历史
 
-[English](README.md)
+[![测试](https://github.com/RomaCredit/codex-provider-switcher/actions/workflows/test.yml/badge.svg)](https://github.com/RomaCredit/codex-provider-switcher/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/codex-provider-switcher)](https://pypi.org/project/codex-provider-switcher/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+
+[English](https://github.com/RomaCredit/codex-provider-switcher/blob/main/README.md) |
+[版本发布](https://github.com/RomaCredit/codex-provider-switcher/releases) |
+[更新记录](https://github.com/RomaCredit/codex-provider-switcher/blob/main/CHANGELOG.md)
 
 Codex Desktop 用量达到限制后，切换到第三方 OpenAI 兼容 API，常见结果是项目侧边栏变空，或者原来的对话显示在错误项目下。本工具的核心不是改几行 `config.toml`，而是同步 Codex Desktop 的会话索引和元数据，让切换 provider 后仍能看到原有项目会话。
+
+## 适用范围
+
+适用于本地 provider 配置切换，以及切换后 Codex Desktop 的项目索引与会话元数据
+不一致的问题。不能恢复已删除的会话文件，不能迁移 ChatGPT 云端对话，也不会增加
+订阅额度或远程修复另一台电脑。第三方 API 单独计费，协议与模型仍须兼容你的
+Codex 版本。本项目是社区工具，与 OpenAI 无官方隶属关系。
 
 ## 问题根因
 
 Codex Desktop 的会话列表同时依赖 `state_5.sqlite` 和
 `sessions/rollout-*.jsonl` 第一行的 `session_meta`。如果配置文件里的
-provider 已经切换，但这些文件中的 `model_provider` 没有同步，就会出现
-“codex desktop history disappeared”“codex conversations missing after
-switching provider”“codex usage limit reached”之后侧边栏空白等现象。
+provider 已经切换，但这些文件中的 `model_provider` 没有同步，可能导致
+侧边栏空白或会话归属异常。这只是可能的原因之一，并非所有历史问题的统一解释。
 
 ## 工具做什么
 
@@ -31,7 +43,7 @@ Ubuntu 服务器可以直接用下面的命令安装，无须先创建虚拟环�
 和 `curl` 或 `wget`；它不是自带 Python 的二进制程序。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.1/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.2/install.sh | sh
 cps --version
 ```
 
@@ -58,7 +70,7 @@ cps --version
 需要安装其他 tag 时，注意版本变量应传给管道右侧的 **`sh`**：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.1/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
+curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.2/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
 ```
 
 ### PyPI
@@ -101,7 +113,7 @@ python3 -m venv .venv
 ### Windows PowerShell
 
 ```powershell
-irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.2/install.ps1 | iex
 ```
 
 Linux 服务器上的安装只处理该服务器能访问的 Codex 数据，不会远程修复另一台
@@ -180,7 +192,26 @@ cps apimaster   # 等价于 cps use apimaster
 cps official    # 等价于 cps use official
 ```
 
+## 实现与兼容性边界
+
+| 本地文件 | 关键字段 | 处理范围 |
+| --- | --- | --- |
+| `config.toml` | `model_provider`、`model`、provider 配置块 | 设置端点、模型和协议 |
+| `state_5.sqlite` | `threads.model_provider`、`threads.cwd` | 对齐线程索引 |
+| `sessions/**/rollout-*.jsonl` | 首条 `session_meta` 中的 provider 和 cwd | 同步元数据，不改消息正文 |
+| `.codex-global-state.json` | `thread-workspace-root-hints` | 重建项目提示信息 |
+
+API profile 使用 profile 名作为 provider ID，订阅模式使用 `openai`。
+Windows 的 `\\?\D:\work\app` 会规范化为 `D:\work\app`。这些是本版本处理的
+本地存储格式，不是上游承诺稳定的公开接口。
+
+默认 `wire_api` 为 `responses`；客户端支持时也可配置 `wire_api = "chat"`。
+“OpenAI 兼容”或 `/models` 探测成功，不等于已验证 Responses、流式输出、
+工具调用或任意模型都能使用。
+
 ## 故障排查
+
+### 切换后历史消失，但会话文件还在
 
 遇到 “codex desktop sidebar empty”、`codex model_provider mismatch`，或者
 切换 provider 后出现 “codex conversations missing after switching provider”，
@@ -190,7 +221,20 @@ cps official    # 等价于 cps use official
 cps repair-history
 ```
 
-API 探测失败时检查 `base_url` 和凭据：
+### 修复后侧边栏仍为空
+
+先确认运行用户和 Codex 数据目录与 Desktop 一致，再重启 Desktop。
+文件已删除、数据目录不同、客户端格式变化都需单独排查；不要反复修复未知格式，
+也不要把真实会话、数据库或凭据上传到公开 issue。
+
+### 额度用完后，切换能增加订阅额度吗？
+
+不能。`codex usage limit reached` 是订阅额度问题，切换只是改用独立计费的 API。
+本工具不提供免费密钥、不绕过额度限制，也不保证第三方模型的可用性。
+
+### API 探测失败
+
+检查 `base_url`、凭据，以及网关是否提供 models 列表接口：
 
 ```bash
 cps profile test openrouter
@@ -205,6 +249,20 @@ cps status
 任何遥测数据，也不会向第三方发送请求，唯一例外是用户主动执行的 `/v1/models`
 连通性探测。
 
+## 验证范围与相关项目
+
+[CI](https://github.com/RomaCredit/codex-provider-switcher/actions/workflows/test.yml)
+覆盖 Windows、macOS、Linux 的 Python 3.10 和 3.13，使用临时测试数据；
+POSIX 安装器在 Linux/macOS 验证。CI 通过不代表所有 Desktop 版本和真实网关均兼容。
+
+Claude Code 用户可使用
+[Claude Provider Switcher](https://github.com/RomaCredit/claude-provider-switcher)。
+两者协议和历史机制不同，不共享密钥，也不相互迁移会话。
+
+[贡献指南](https://github.com/RomaCredit/codex-provider-switcher/blob/main/CONTRIBUTING.md) |
+[提交问题](https://github.com/RomaCredit/codex-provider-switcher/issues/new/choose) |
+[安全说明](https://github.com/RomaCredit/codex-provider-switcher/blob/main/SECURITY.md)
+
 ## 许可证
 
-MIT，见 [LICENSE](LICENSE)。
+MIT，见 [LICENSE](https://github.com/RomaCredit/codex-provider-switcher/blob/main/LICENSE)。
