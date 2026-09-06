@@ -99,6 +99,9 @@ brew tap RomaCredit/codex
 brew install codex-provider-switcher
 ```
 
+If Homebrew requires tap trust, inspect the formula and authorize just that
+formula with `brew trust --formula RomaCredit/codex/codex-provider-switcher`.
+
 ### pipx
 
 With pipx installed:

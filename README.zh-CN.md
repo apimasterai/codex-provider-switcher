@@ -92,6 +92,9 @@ brew tap RomaCredit/codex
 brew install codex-provider-switcher
 ```
 
+新版 Homebrew 如要求信任 tap，先检查配方，再仅授权该配方：
+`brew trust --formula RomaCredit/codex/codex-provider-switcher`。
+
 ### pipx
 
 机器已安装 pipx 时：
