@@ -43,7 +43,7 @@ Ubuntu 服务器可以直接用下面的命令安装，无须先创建虚拟环�
 和 `curl` 或 `wget`；它不是自带 Python 的二进制程序。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.2/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.sh | sh
 cps --version
 ```
 
@@ -70,7 +70,7 @@ cps --version
 需要安装其他 tag 时，注意版本变量应传给管道右侧的 **`sh`**：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.2/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
+curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
 ```
 
 ### PyPI
@@ -116,7 +116,7 @@ python3 -m venv .venv
 ### Windows PowerShell
 
 ```powershell
-irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.2/install.ps1 | iex
+irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.ps1 | iex
 ```
 
 Linux 服务器上的安装只处理该服务器能访问的 Codex 数据，不会远程修复另一台

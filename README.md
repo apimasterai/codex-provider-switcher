@@ -49,7 +49,7 @@ modifying system Python packages. It works on Ubuntu/Debian with PEP 668 enabled
 it still requires an existing Python 3.10+ installation and `curl` or `wget`.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.2/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.sh | sh
 cps --version
 ```
 
@@ -76,7 +76,7 @@ Set `CODEX_SWITCHER_BIN_DIR` and `CODEX_SWITCHER_DATA_DIR` to customize the
 directories. For a different version, set the variable on **`sh`**, not on `curl`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.2/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
+curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
 ```
 
 ### PyPI
@@ -123,7 +123,7 @@ python3 -m venv .venv
 ### Windows PowerShell
 
 ```powershell
-irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.2/install.ps1 | iex
+irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.ps1 | iex
 ```
 
 Linux server installations operate on that server's local Codex data only.

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.3
 
 - Fix the Windows menu launcher requiring option `1` to be chosen twice.
 - Point `model_catalog_json` at the profile's model catalog for API profiles and remove it for subscription profiles, so the model list follows the provider.

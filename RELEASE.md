@@ -21,8 +21,8 @@
 6. Create and push a release tag:
 
    ```bash
-   git tag v0.3.2
-   git push origin v0.3.2
+   git tag v0.3.3
+   git push origin v0.3.3
    ```
 
 7. The tag workflow runs the tests, downloads the tagged standalone program to

@@ -29,7 +29,7 @@ try:
 except ImportError:  # Python 3.10
     tomllib = None
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 DEFAULT_MODEL = "gpt-5.6-sol"
 DEFAULT_PROFILES = {
     "official": {"type": "subscription"},
