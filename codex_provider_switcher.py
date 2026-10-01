@@ -8,6 +8,7 @@ import ctypes
 import getpass
 import json
 import os
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -77,6 +78,7 @@ class Profile:
     base_url: str | None = None
     default_model: str | None = None
     wire_api: str = "responses"
+    model_catalog: str | None = None
 
     @property
     def is_api(self) -> bool:
@@ -132,7 +134,7 @@ def load_profiles(path: Path) -> dict[str, Profile]:
     for name, values in (raw.get("profiles") or {}).items():
         if not isinstance(values, dict):
             raise ValueError(f"Invalid profile: {name}")
-        profile = Profile(str(name), str(values.get("type", "")), values.get("base_url"), values.get("default_model"), str(values.get("wire_api", "responses")))
+        profile = Profile(str(name), str(values.get("type", "")), values.get("base_url"), values.get("default_model"), str(values.get("wire_api", "responses")), values.get("model_catalog"))
         profile.validate()
         profiles[profile.name] = profile
     return profiles
@@ -151,6 +153,8 @@ def save_profiles(path: Path, profiles: dict[str, Profile]) -> None:
             lines.append(f"default_model = {_toml_string(profile.default_model)}")
         if profile.is_api and profile.wire_api != "responses":
             lines.append(f"wire_api = {_toml_string(profile.wire_api)}")
+        if profile.model_catalog:
+            lines.append(f"model_catalog = {_toml_string(profile.model_catalog)}")
         lines.append("")
     path.write_text("\n".join(lines), encoding="utf-8")
 
@@ -351,9 +355,40 @@ class Switcher:
             return provider
         return "official" if "official" in self.profiles() else next(iter(self.profiles()), "official")
 
+    def catalog_for(self, profile: Profile) -> Path | None:
+        if not profile.is_api:
+            return None
+        if profile.model_catalog:
+            return Path(profile.model_catalog).expanduser()
+        default = self.codex_home / "model_catalog.merged.json"
+        return default if default.exists() else None
+
+    def apply_model_catalog(self, profile: Profile) -> None:
+        catalog = self.catalog_for(profile)
+        text = self.read_config()
+        if catalog and catalog.exists():
+            text = self.set_top_level_string(text, "model_catalog_json", str(catalog))
+        else:
+            text = self.remove_top_level_key(text, "model_catalog_json")
+        self.write_config(text)
+
     def history_provider(self) -> str:
         profile = self.profiles().get(self.current_profile_name())
         return profile.name if profile and profile.is_api else "openai"
+
+    def available_models(self) -> set[str]:
+        profile = self.profiles().get(self.current_profile_name())
+        path = self.catalog_for(profile) if profile else None
+        if not path and not (profile and profile.is_api):
+            path = self.codex_home / "models_cache.json"
+        slugs: set[str] = set()
+        try:
+            if path and path.exists():
+                data = json.loads(path.read_text(encoding="utf-8"))
+                slugs = {str(m["slug"]) for m in data.get("models", []) if isinstance(m, dict) and m.get("slug")}
+        except (OSError, ValueError):
+            return set()
+        return slugs
 
     def repair_state_db(self, desired_provider: str) -> None:
         if not self.state_db_path.exists():
@@ -375,11 +410,17 @@ class Switcher:
                 if isinstance(cwd, str) and cwd.startswith("\\\\?\\"):
                     cur.execute("update threads set cwd = ? where id = ?", (cwd[4:], thread_id))
                     cwd_updated += 1
+            path_updated = cur.execute("update threads set rollout_path = substr(rollout_path, 5) where rollout_path like ?", ("\\\\?\\%",)).rowcount
+            model_updated = 0
+            available, fallback = self.available_models(), self.get_top_level_value(self.read_config(), "model")
+            if available and fallback:
+                placeholders = ",".join("?" * len(available))
+                model_updated = cur.execute(f"update threads set model = ? where model is not null and model <> '' and model not in ({placeholders})", (fallback, *sorted(available))).rowcount
             provider_updated = cur.execute("update threads set model_provider = ? where model_provider <> ?", (desired_provider, desired_provider)).rowcount
             src.commit()
         finally:
             src.close()
-        print(f"Repaired Codex state DB: cwd_checked={len(rows)}, cwd_updated={cwd_updated}, provider={desired_provider}, provider_updated={provider_updated}, backup={backup}")
+        print(f"Repaired Codex state DB: cwd_checked={len(rows)}, cwd_updated={cwd_updated}, provider={desired_provider}, provider_updated={provider_updated}, model_updated={model_updated}, path_updated={path_updated}, backup={backup}")
 
     def repair_session_metadata(self, desired_provider: str) -> None:
         if not self.sessions_dir.exists():
@@ -390,7 +431,7 @@ class Switcher:
         for path in self.sessions_dir.rglob("rollout-*.jsonl"):
             checked += 1
             try:
-                text = path.read_text(encoding="utf-8")
+                text = path.read_bytes().decode("utf-8")
                 if not text:
                     continue
                 first, separator, rest = text.partition("\n")
@@ -408,19 +449,188 @@ class Switcher:
                 backup_path = backup_dir / path.relative_to(self.sessions_dir)
                 backup_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(path, backup_path)
-                path.write_text(json.dumps(meta, ensure_ascii=False, separators=(",", ":")) + (separator or "\n") + rest, encoding="utf-8")
+                path.write_bytes((json.dumps(meta, ensure_ascii=False, separators=(",", ":")) + (separator or "\n") + rest).encode("utf-8"))
                 changed += 1
             except Exception:
                 errors += 1
         print(f"Repaired Codex session metadata: checked={checked}, changed={changed}, provider={desired_provider}, parse_errors={errors}, backup_dir={backup_dir if changed else 'not-needed'}")
 
-    def repair_desktop_history_hints(self) -> None:
-        if not self.global_state_path.exists():
-            self.warn("global_state_missing", self.global_state_path)
-            return
+    @staticmethod
+    def _foreign_item_id(value: Any) -> bool:
+        return isinstance(value, str) and (value.startswith("item_") or re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-.*", value) is not None)
+
+    @staticmethod
+    def _is_replay_unsafe_reasoning(payload: dict[str, Any]) -> bool:
+        # OpenAI cannot replay reasoning without its own encrypted content (store=false).
+        return payload.get("type") == "reasoning" and (not payload.get("encrypted_content") or bool(payload.get("content")) or Switcher._foreign_item_id(payload.get("id")))
+
+    @staticmethod
+    def _response_item(line: bytes) -> dict[str, Any] | None:
+        if b'"response_item"' not in line[:80]:
+            return None
+        try:
+            obj = json.loads(line)
+        except ValueError:
+            return None
+        return obj if isinstance(obj, dict) and obj.get("type") == "response_item" and isinstance(obj.get("payload"), dict) else None
+
+    @staticmethod
+    def _drops_line(line: bytes) -> bool:
+        obj = Switcher._response_item(line)
+        return bool(obj) and Switcher._is_replay_unsafe_reasoning(obj["payload"])
+
+    def repair_foreign_item_ids(self) -> None:
         if not self.sessions_dir.exists():
-            self.warn("sessions_missing", self.sessions_dir)
             return
+        backup_dir = self.state_dir / f"item-ids.{timestamp()}.bak"
+        changed = dropped = stripped = 0
+        for path in self.sessions_dir.rglob("rollout-*.jsonl"):
+            try:
+                raw = path.read_bytes()
+                if b'"response_item"' not in raw:
+                    continue
+                out, touched = [], False
+                for line in raw.split(b"\n"):
+                    obj = self._response_item(line)
+                    if obj:
+                        payload = obj["payload"]
+                        if self._is_replay_unsafe_reasoning(payload):
+                            touched = True
+                            dropped += 1
+                            continue
+                        if self._foreign_item_id(payload.get("id")):
+                            touched = True
+                            payload.pop("id", None)
+                            stripped += 1
+                            line = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8") + (b"\r" if line.endswith(b"\r") else b"")
+                    out.append(line)
+                if touched:
+                    backup_path = backup_dir / path.relative_to(self.sessions_dir)
+                    backup_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(path, backup_path)
+                    path.write_bytes(b"\n".join(out))
+                    changed += 1
+            except Exception:
+                continue
+        print(f"Repaired non-OpenAI item ids: files={changed}, reasoning_dropped={dropped}, ids_stripped={stripped}")
+
+    @staticmethod
+    def _rollout_thread_id(path: Path) -> str:
+        return path.stem[-36:]
+
+    @staticmethod
+    def _first_meta(path: Path) -> dict[str, Any] | None:
+        try:
+            with path.open("rb") as handle:
+                meta = json.loads(handle.readline())
+            return meta if isinstance(meta, dict) and meta.get("type") == "session_meta" and isinstance(meta.get("payload"), dict) else None
+        except (OSError, ValueError):
+            return None
+
+    def snapshot_lineage(self) -> dict[str, Any]:
+        paths = {self._rollout_thread_id(p): p for p in self.sessions_dir.rglob("rollout-*.jsonl")} if self.sessions_dir.exists() else {}
+        children: dict[str, dict[str, Any]] = {}
+        for thread_id, path in paths.items():
+            meta = self._first_meta(path)
+            base = meta["payload"].get("history_base") if meta else None
+            if isinstance(base, dict) and base.get("thread_id") in paths:
+                children[thread_id] = base
+        sources = {src: paths[src].read_bytes() for src in {b["thread_id"] for b in children.values()}}
+        return {"paths": paths, "children": children, "sources": sources}
+
+    def repair_lineage(self, snapshot: dict[str, Any]) -> None:
+        paths, children, sources = snapshot["paths"], snapshot["children"], snapshot["sources"]
+        order: list[str] = []
+
+        def visit(thread_id: str) -> None:
+            if thread_id in order:
+                return
+            if thread_id in children:
+                visit(children[thread_id]["thread_id"])
+            order.append(thread_id)
+
+        for thread_id in children:
+            visit(thread_id)
+        new_bases: dict[str, dict[str, Any]] = {}
+        deltas: dict[str, int] = {}
+        backup_dir = self.state_dir / f"lineage.{timestamp()}.bak"
+        updated = skipped = 0
+        for child in (t for t in order if t in children):
+            old, source = children[child], children[child]["thread_id"]
+            current = paths[source].read_bytes().split(b"\n")
+            cutoff, position, new_offset, consumed = old["end_byte_offset"], 0, 0, 0
+            for line in sources[source].split(b"\n"):
+                if position == cutoff:
+                    break
+                position += len(line) + 1
+                if self._drops_line(line):
+                    continue
+                if consumed >= len(current):
+                    position = -1
+                    break
+                new_offset += len(current[consumed]) + 1
+                consumed += 1
+            if position != cutoff or cutoff <= 0:
+                skipped += 1
+                continue
+            new_offset += deltas.get(source, 0)
+            parent_ordinal = new_bases.get(source, children.get(source, {})).get("end_ordinal_exclusive", 0)
+            new = dict(old, end_ordinal_exclusive=parent_ordinal + consumed, end_byte_offset=new_offset)
+            new_bases[child] = new
+            if new == old:
+                continue
+            path = paths[child]
+            first, separator, rest = path.read_bytes().partition(b"\n")
+            meta = json.loads(first)
+            meta["payload"]["history_base"] = new
+            rewritten = json.dumps(meta, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            deltas[child] = len(rewritten) - len(first)
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, backup_dir / path.name)
+            path.write_bytes(rewritten + separator + rest)
+            updated += 1
+        print(f"Repaired history lineage offsets: updated={updated}, skipped={skipped}, backup_dir={backup_dir if updated else 'not-needed'}")
+
+    def reset_history_cache(self) -> None:
+        db_path = self.codex_home / "thread_history_1.sqlite"
+        if not db_path.exists() or not self.sessions_dir.exists():
+            return
+        sizes = {self._rollout_thread_id(p): p.stat().st_size for p in self.sessions_dir.rglob("rollout-*.jsonl")}
+        stale: list[str] = []
+        conn = sqlite3.connect(db_path)
+        try:
+            rows = conn.execute("select thread_id, next_rollout_byte_offset from thread_history_projection_state").fetchall()
+            stale = [t for t, offset in rows if t in sizes and offset != sizes[t]]
+            if stale:
+                self.ensure_state_dir()
+                shutil.copy2(db_path, self.state_dir / f"thread_history_1.{timestamp()}.sqlite.bak")
+                for table in ("thread_turns", "thread_items", "thread_history_projection_state", "thread_realtime_items"):
+                    conn.executemany(f"delete from {table} where thread_id = ?", [(t,) for t in stale])
+                conn.commit()
+        except sqlite3.Error as exc:
+            self.warn(f"Could not reset Codex history cache: {exc}")
+        finally:
+            conn.close()
+        print(f"Reset Codex history cache for {len(stale)} thread(s); Codex rebuilds it on next start.")
+
+    def repair_desktop_history_hints(self) -> None:
+        if self.global_state_path.exists() and self.sessions_dir.exists():
+            self._repair_workspace_hints()
+        else:
+            if not self.global_state_path.exists():
+                self.warn("global_state_missing", self.global_state_path)
+            if not self.sessions_dir.exists():
+                self.warn("sessions_missing", self.sessions_dir)
+        snapshot = self.snapshot_lineage()
+        if self.history_provider() == "openai":
+            self.repair_foreign_item_ids()
+        self.repair_session_metadata(self.history_provider())
+        self.repair_lineage(snapshot)
+        self.reset_history_cache()
+        self.repair_state_db(self.history_provider())
+        self.say("restart")
+
+    def _repair_workspace_hints(self) -> None:
         state = json.loads(self.global_state_path.read_text(encoding="utf-8"))
         hints = dict(state.get("thread-workspace-root-hints") or {})
         found = added = updated = errors = 0
@@ -447,9 +657,6 @@ class Switcher:
         state["thread-workspace-root-hints"] = hints
         self.global_state_path.write_text(json.dumps(state, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         print(f"Repaired Codex Desktop history hints: sessions={found}, added={added}, updated={updated}, parse_errors={errors}")
-        self.repair_session_metadata(self.history_provider())
-        self.repair_state_db(self.history_provider())
-        self.say("restart")
 
     def _save_subscription_snapshot(self, name: str) -> None:
         target = self.state_dir / "profiles" / name
@@ -503,6 +710,7 @@ class Switcher:
         else:
             self._restore_subscription_snapshot(name)
             self.say("switched_subscription", name)
+        self.apply_model_catalog(profile)
         self.active_path.write_text(name, encoding="utf-8")
         self.repair_desktop_history_hints()
         self.say("history_untouched")

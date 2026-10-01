@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Fix the Windows menu launcher requiring option `1` to be chosen twice.
+- Point `model_catalog_json` at the profile's model catalog for API profiles and remove it for subscription profiles, so the model list follows the provider.
+- Add an optional `model_catalog` field to profiles.
+- Make `repair-history` keep going when Desktop global state or sessions are missing.
+- When switching to a subscription provider, drop reasoning items that OpenAI cannot replay (no encrypted content, or ids from other providers) and strip foreign item ids, fixing `Invalid 'input[n].id'` and `Items are not persisted` errors in resumed conversations.
+- Recompute paginated history lineage offsets after rewriting rollout files, fixing `cutoff byte offset is past the source rollout`, and reset the stale thread history cache.
+- Fall back to a model that exists for the active provider for threads whose recorded model is unavailable, and strip the `\?\` prefix from stored rollout paths.
+- Preserve rollout line endings when rewriting session metadata.
+
 ## 0.3.2
 
 - Clarify local history repair, protocol requirements, billing, and tested scope.
