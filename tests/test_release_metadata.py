@@ -6,7 +6,7 @@ from codex_provider_switcher import __version__
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY = "https://github.com/RomaCredit/codex-provider-switcher"
+REPOSITORY = "https://github.com/apimasterai/codex-provider-switcher"
 
 
 class ReleaseMetadataTests(unittest.TestCase):

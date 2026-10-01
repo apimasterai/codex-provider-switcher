@@ -2,7 +2,7 @@
 set -eu
 
 VERSION="${CODEX_SWITCHER_VERSION:-v0.3.3}"
-SCRIPT_URL="https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/${VERSION}/codex_provider_switcher.py"
+SCRIPT_URL="https://raw.githubusercontent.com/apimasterai/codex-provider-switcher/${VERSION}/codex_provider_switcher.py"
 
 if ! command -v python3 >/dev/null 2>&1; then
   echo "Python 3.10 or newer is required. Install python3 and run this installer again." >&2

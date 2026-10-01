@@ -26,11 +26,11 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/RomaCredit/codex-provider-switcher"
-Repository = "https://github.com/RomaCredit/codex-provider-switcher"
-Issues = "https://github.com/RomaCredit/codex-provider-switcher/issues"
-Documentation = "https://github.com/RomaCredit/codex-provider-switcher#readme"
-Changelog = "https://github.com/RomaCredit/codex-provider-switcher/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/apimasterai/codex-provider-switcher"
+Repository = "https://github.com/apimasterai/codex-provider-switcher"
+Issues = "https://github.com/apimasterai/codex-provider-switcher/issues"
+Documentation = "https://github.com/apimasterai/codex-provider-switcher#readme"
+Changelog = "https://github.com/apimasterai/codex-provider-switcher/blob/main/CHANGELOG.md"
 
 [project.scripts]
 cps = "codex_provider_switcher:main"

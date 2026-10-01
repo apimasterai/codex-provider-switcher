@@ -5,7 +5,7 @@ title: Codex Provider Switcher
 authors:
   - name: RomaCredit
 version: 0.3.3
-repository-code: "https://github.com/RomaCredit/codex-provider-switcher"
+repository-code: "https://github.com/apimasterai/codex-provider-switcher"
 license: MIT
 keywords:
   - codex-desktop

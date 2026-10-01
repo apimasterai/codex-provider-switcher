@@ -1,12 +1,12 @@
 # Codex Provider Switcher：切换 provider 也不丢会话历史
 
-[![测试](https://github.com/RomaCredit/codex-provider-switcher/actions/workflows/test.yml/badge.svg)](https://github.com/RomaCredit/codex-provider-switcher/actions/workflows/test.yml)
+[![测试](https://github.com/apimasterai/codex-provider-switcher/actions/workflows/test.yml/badge.svg)](https://github.com/apimasterai/codex-provider-switcher/actions/workflows/test.yml)
 [![PyPI](https://img.shields.io/pypi/v/codex-provider-switcher)](https://pypi.org/project/codex-provider-switcher/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 
-[English](https://github.com/RomaCredit/codex-provider-switcher/blob/main/README.md) |
-[版本发布](https://github.com/RomaCredit/codex-provider-switcher/releases) |
-[更新记录](https://github.com/RomaCredit/codex-provider-switcher/blob/main/CHANGELOG.md)
+[English](https://github.com/apimasterai/codex-provider-switcher/blob/main/README.md) |
+[版本发布](https://github.com/apimasterai/codex-provider-switcher/releases) |
+[更新记录](https://github.com/apimasterai/codex-provider-switcher/blob/main/CHANGELOG.md)
 
 Codex Desktop 用量达到限制后，切换到第三方 OpenAI 兼容 API，常见结果是项目侧边栏变空，或者原来的对话显示在错误项目下。本工具的核心不是改几行 `config.toml`，而是同步 Codex Desktop 的会话索引和元数据，让切换 provider 后仍能看到原有项目会话。
 
@@ -43,7 +43,7 @@ Ubuntu 服务器可以直接用下面的命令安装，无须先创建虚拟环�
 和 `curl` 或 `wget`；它不是自带 Python 的二进制程序。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/apimasterai/codex-provider-switcher/v0.3.3/install.sh | sh
 cps --version
 ```
 
@@ -70,7 +70,7 @@ cps --version
 需要安装其他 tag 时，注意版本变量应传给管道右侧的 **`sh`**：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
+curl -fsSL https://raw.githubusercontent.com/apimasterai/codex-provider-switcher/v0.3.3/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
 ```
 
 ### PyPI
@@ -88,12 +88,12 @@ python -m pip install --upgrade codex-provider-switcher
 ### Homebrew
 
 ```bash
-brew tap RomaCredit/codex
+brew tap apimasterai/codex
 brew install codex-provider-switcher
 ```
 
 新版 Homebrew 如要求信任 tap，先检查配方，再仅授权该配方：
-`brew trust --formula RomaCredit/codex/codex-provider-switcher`。
+`brew trust --formula apimasterai/codex/codex-provider-switcher`。
 
 ### pipx
 
@@ -106,7 +106,7 @@ pipx install codex-provider-switcher
 ### 源码安装
 
 ```bash
-git clone https://github.com/RomaCredit/codex-provider-switcher.git
+git clone https://github.com/apimasterai/codex-provider-switcher.git
 cd codex-provider-switcher
 python3 -m venv .venv
 .venv/bin/python -m pip install .
@@ -116,7 +116,7 @@ python3 -m venv .venv
 ### Windows PowerShell
 
 ```powershell
-irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.ps1 | iex
+irm https://raw.githubusercontent.com/apimasterai/codex-provider-switcher/v0.3.3/install.ps1 | iex
 ```
 
 Linux 服务器上的安装只处理该服务器能访问的 Codex 数据，不会远程修复另一台
@@ -254,7 +254,7 @@ cps status
 
 ## 验证范围与相关项目
 
-[CI](https://github.com/RomaCredit/codex-provider-switcher/actions/workflows/test.yml)
+[CI](https://github.com/apimasterai/codex-provider-switcher/actions/workflows/test.yml)
 覆盖 Windows、macOS、Linux 的 Python 3.10 和 3.13，使用临时测试数据；
 POSIX 安装器在 Linux/macOS 验证。CI 通过不代表所有 Desktop 版本和真实网关均兼容。
 
@@ -262,10 +262,10 @@ Claude Code 用户可使用
 [Claude Provider Switcher](https://github.com/RomaCredit/claude-provider-switcher)。
 两者协议和历史机制不同，不共享密钥，也不相互迁移会话。
 
-[贡献指南](https://github.com/RomaCredit/codex-provider-switcher/blob/main/CONTRIBUTING.md) |
-[提交问题](https://github.com/RomaCredit/codex-provider-switcher/issues/new/choose) |
-[安全说明](https://github.com/RomaCredit/codex-provider-switcher/blob/main/SECURITY.md)
+[贡献指南](https://github.com/apimasterai/codex-provider-switcher/blob/main/CONTRIBUTING.md) |
+[提交问题](https://github.com/apimasterai/codex-provider-switcher/issues/new/choose) |
+[安全说明](https://github.com/apimasterai/codex-provider-switcher/blob/main/SECURITY.md)
 
 ## 许可证
 
-MIT，见 [LICENSE](https://github.com/RomaCredit/codex-provider-switcher/blob/main/LICENSE)。
+MIT，见 [LICENSE](https://github.com/apimasterai/codex-provider-switcher/blob/main/LICENSE)。

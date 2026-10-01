@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Stop"
-$Repository = "https://github.com/RomaCredit/codex-provider-switcher/archive/refs/tags/v0.3.3.zip"
+$Repository = "https://github.com/apimasterai/codex-provider-switcher/archive/refs/tags/v0.3.3.zip"
 
 if (Get-Command pipx -ErrorAction SilentlyContinue) {
     pipx install --force $Repository

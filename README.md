@@ -1,13 +1,13 @@
 # Codex Provider Switcher: keep Codex Desktop history visible
 
-[![Tests](https://github.com/RomaCredit/codex-provider-switcher/actions/workflows/test.yml/badge.svg)](https://github.com/RomaCredit/codex-provider-switcher/actions/workflows/test.yml)
+[![Tests](https://github.com/apimasterai/codex-provider-switcher/actions/workflows/test.yml/badge.svg)](https://github.com/apimasterai/codex-provider-switcher/actions/workflows/test.yml)
 [![PyPI](https://img.shields.io/pypi/v/codex-provider-switcher)](https://pypi.org/project/codex-provider-switcher/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/RomaCredit/codex-provider-switcher/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/apimasterai/codex-provider-switcher/blob/main/LICENSE)
 
-[中文文档](https://github.com/RomaCredit/codex-provider-switcher/blob/main/README.zh-CN.md) |
-[Releases](https://github.com/RomaCredit/codex-provider-switcher/releases) |
-[Changelog](https://github.com/RomaCredit/codex-provider-switcher/blob/main/CHANGELOG.md)
+[中文文档](https://github.com/apimasterai/codex-provider-switcher/blob/main/README.zh-CN.md) |
+[Releases](https://github.com/apimasterai/codex-provider-switcher/releases) |
+[Changelog](https://github.com/apimasterai/codex-provider-switcher/blob/main/CHANGELOG.md)
 
 When Codex Desktop hits a usage limit and you switch to an OpenAI-compatible
 endpoint, the project sidebar can become empty or show the wrong conversations.
@@ -49,7 +49,7 @@ modifying system Python packages. It works on Ubuntu/Debian with PEP 668 enabled
 it still requires an existing Python 3.10+ installation and `curl` or `wget`.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/apimasterai/codex-provider-switcher/v0.3.3/install.sh | sh
 cps --version
 ```
 
@@ -76,7 +76,7 @@ Set `CODEX_SWITCHER_BIN_DIR` and `CODEX_SWITCHER_DATA_DIR` to customize the
 directories. For a different version, set the variable on **`sh`**, not on `curl`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
+curl -fsSL https://raw.githubusercontent.com/apimasterai/codex-provider-switcher/v0.3.3/install.sh | CODEX_SWITCHER_VERSION=v0.3.0 sh
 ```
 
 ### PyPI
@@ -95,12 +95,12 @@ be blocked by PEP 668; do not disable this protection with `--break-system-packa
 ### Homebrew
 
 ```bash
-brew tap RomaCredit/codex
+brew tap apimasterai/codex
 brew install codex-provider-switcher
 ```
 
 If Homebrew requires tap trust, inspect the formula and authorize just that
-formula with `brew trust --formula RomaCredit/codex/codex-provider-switcher`.
+formula with `brew trust --formula apimasterai/codex/codex-provider-switcher`.
 
 ### pipx
 
@@ -113,7 +113,7 @@ pipx install codex-provider-switcher
 ### From source
 
 ```bash
-git clone https://github.com/RomaCredit/codex-provider-switcher.git
+git clone https://github.com/apimasterai/codex-provider-switcher.git
 cd codex-provider-switcher
 python3 -m venv .venv
 .venv/bin/python -m pip install .
@@ -123,7 +123,7 @@ python3 -m venv .venv
 ### Windows PowerShell
 
 ```powershell
-irm https://raw.githubusercontent.com/RomaCredit/codex-provider-switcher/v0.3.3/install.ps1 | iex
+irm https://raw.githubusercontent.com/apimasterai/codex-provider-switcher/v0.3.3/install.ps1 | iex
 ```
 
 Linux server installations operate on that server's local Codex data only.
@@ -264,7 +264,7 @@ cps official    # equivalent to cps use official
 
 ## Verification and related tools
 
-The [test workflow](https://github.com/RomaCredit/codex-provider-switcher/actions/workflows/test.yml)
+The [test workflow](https://github.com/apimasterai/codex-provider-switcher/actions/workflows/test.yml)
 runs on Windows, macOS, and Linux with Python 3.10 and 3.13. Tests use temporary
 fixtures; POSIX installer checks run on Linux/macOS. This does not establish
 compatibility with every Desktop release or live provider. No universal
@@ -275,10 +275,10 @@ For **Claude Code**, see
 It uses the Anthropic Messages protocol and has different history semantics;
 the tools do not share credentials or migrate each other's conversations.
 
-[Contributing](https://github.com/RomaCredit/codex-provider-switcher/blob/main/CONTRIBUTING.md) |
-[Report an issue](https://github.com/RomaCredit/codex-provider-switcher/issues/new/choose) |
-[Security](https://github.com/RomaCredit/codex-provider-switcher/blob/main/SECURITY.md)
+[Contributing](https://github.com/apimasterai/codex-provider-switcher/blob/main/CONTRIBUTING.md) |
+[Report an issue](https://github.com/apimasterai/codex-provider-switcher/issues/new/choose) |
+[Security](https://github.com/apimasterai/codex-provider-switcher/blob/main/SECURITY.md)
 
 ## License
 
-MIT. See [LICENSE](https://github.com/RomaCredit/codex-provider-switcher/blob/main/LICENSE).
+MIT. See [LICENSE](https://github.com/apimasterai/codex-provider-switcher/blob/main/LICENSE).

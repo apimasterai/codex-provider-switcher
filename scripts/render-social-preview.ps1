@@ -21,7 +21,7 @@ try {
     $graphics.DrawString('Windows  /  macOS  /  Linux', $label, $muted, 80, 332)
     $graphics.FillRectangle($ink, 80, 412, 1120, 84)
     $graphics.DrawString('cps use <profile>', $code, $white, 108, 435)
-    $graphics.DrawString('github.com/RomaCredit/codex-provider-switcher', $label, $muted, 80, 548)
+    $graphics.DrawString('github.com/apimasterai/codex-provider-switcher', $label, $muted, 80, 548)
     $directory = Split-Path -Parent ([System.IO.Path]::GetFullPath($OutputPath))
     $null = New-Item -ItemType Directory -Path $directory -Force
     $bitmap.Save([System.IO.Path]::GetFullPath($OutputPath), [System.Drawing.Imaging.ImageFormat]::Png)

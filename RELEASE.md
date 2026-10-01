@@ -34,13 +34,13 @@
    cps --version
    ```
 
-8. Update the URL and SHA256 in `RomaCredit/homebrew-codex` for the new tag.
+8. Update the URL and SHA256 in `apimasterai/homebrew-codex` for the new tag.
    The SHA256 must be calculated from the downloaded archive, not the git commit.
 
 9. Create a GitHub Release with installation commands, changes, compatibility
    limits, and the successful CI run.
 
-The PyPI owner must authorize owner `RomaCredit`, repository
+The PyPI owner must authorize owner `apimasterai`, repository
 `codex-provider-switcher`, workflow `publish.yml`, environment `pypi`.
 Publishing is gated by the Windows/macOS/Linux Python 3.10/3.13 matrix.
 Manual dispatch is supported on version tags. For deliberate manual upload,
