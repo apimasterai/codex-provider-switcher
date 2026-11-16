@@ -35,6 +35,7 @@ DEFAULT_PROFILES = {
     "official": {"type": "subscription"},
     "apimaster": {"type": "api", "base_url": "https://apimaster.ai/v1", "default_model": "gpt-5.6-sol"},
     "openrouter": {"type": "api", "base_url": "https://openrouter.ai/api/v1", "default_model": "anthropic/claude-sonnet-4.6"},
+    "teapotrouter": {"type": "api", "base_url": "https://api.teapotrouter.com/v1", "default_model": "gpt-6.1-sol"},
 }
 MESSAGES = {
     "state_db_missing": "Codex state DB not found: {0}",
