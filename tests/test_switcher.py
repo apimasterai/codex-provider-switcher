@@ -44,7 +44,8 @@ class SwitcherTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             profiles = load_profiles(root / "profiles.toml")
-            self.assertEqual(set(profiles), {"official", "apimaster", "openrouter"})
+            self.assertEqual(set(profiles), {"official", "apimaster", "openrouter", "teapotrouter"})
+            self.assertEqual(profiles["teapotrouter"].base_url, "https://api.teapotrouter.com/v1")
             self.assertTrue((root / "profiles.toml").exists())
 
     def test_custom_profiles_round_trip_and_validation(self):
