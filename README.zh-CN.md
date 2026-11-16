@@ -160,6 +160,11 @@ default_model = "gpt-5.6-sol"
 type = "api"
 base_url = "https://openrouter.ai/api/v1"
 default_model = "anthropic/claude-sonnet-4.6"
+
+[profiles.teapotrouter]
+type = "api"
+base_url = "https://api.teapotrouter.com/v1"
+default_model = "gpt-6.1-sol"
 ```
 
 它们和用户自己添加的 profile 使用同一套逻辑，都可以修改或删除：
